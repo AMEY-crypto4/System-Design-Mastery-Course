@@ -1,0 +1,857 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A searchable interview-prep reference covering DSA, databases, backend, frontend, system design, OS/networking, DevOps, security, testing, design patterns, and AI/RAG systems.">
+<title>The Vocabulary Stack</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#ffffff; --bg-alt:#f3f3f3; --bg-tab-active:#ffffff; --bg-tab-inactive:#ececec;
+  --border:#d9d9d9; --text:#1f1f1f; --text-dim:#6b6b6b; --text-faint:#9a9a9a;
+  --accent:#0060c0; --accent-2:#0a6e4c; --accent-3:#a31515;
+  --code-bg:#f5f5f5; --card-bg:#fafafa; --hl:#fff4c2; --shadow:0 1px 3px rgba(0,0,0,.08);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1e1e1e; --bg-alt:#252526; --bg-tab-active:#1e1e1e; --bg-tab-inactive:#2d2d2d;
+    --border:#3c3c3c; --text:#d4d4d4; --text-dim:#9d9d9d; --text-faint:#6f6f6f;
+    --accent:#569cd6; --accent-2:#4ec9b0; --accent-3:#ce9178;
+    --code-bg:#252526; --card-bg:#232324; --hl:#4a3f14; --shadow:0 1px 3px rgba(0,0,0,.4);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1e1e1e; --bg-alt:#252526; --bg-tab-active:#1e1e1e; --bg-tab-inactive:#2d2d2d;
+  --border:#3c3c3c; --text:#d4d4d4; --text-dim:#9d9d9d; --text-faint:#6f6f6f;
+  --accent:#569cd6; --accent-2:#4ec9b0; --accent-3:#ce9178;
+  --code-bg:#252526; --card-bg:#232324; --hl:#4a3f14; --shadow:0 1px 3px rgba(0,0,0,.4);
+  color-scheme: dark;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:"IBM Plex Sans",-apple-system,sans-serif;
+  font-size:14px; line-height:1.55;
+  display:flex; flex-direction:column; overflow:hidden;
+}
+code,.mono,.term,.tab,.filename,.kbd,.badge,.tag{font-family:"IBM Plex Mono",ui-monospace,monospace;}
+h1,h2,h3{font-family:"IBM Plex Mono",ui-monospace,monospace; text-wrap:balance; font-weight:600;}
+::selection{background:#ADD6FF; color:#000;}
+
+/* ---- App shell ---- */
+#app{flex:1; display:flex; min-height:0; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);}
+
+.topbar{
+  flex:0 0 auto; display:flex; align-items:center; gap:12px;
+  padding:10px 14px; padding-top:calc(10px + env(safe-area-inset-top,0px));
+  background:var(--bg-alt); border-bottom:1px solid var(--border);
+}
+.topbar .brand{display:flex; align-items:center; gap:8px; font-weight:600; white-space:nowrap;}
+.topbar .brand .dots{display:flex; gap:5px;}
+.topbar .brand .dot{width:9px; height:9px; border-radius:50%;}
+.dot.r{background:#ff5f56;} .dot.y{background:#ffbd2e;} .dot.g{background:#27c93f;}
+.topbar .brand-label{color:var(--text-dim); font-size:12.5px;}
+.searchwrap{position:relative; flex:1; max-width:440px; margin-left:auto;}
+.searchbox{
+  width:100%; padding:7px 10px 7px 30px; border:1px solid var(--border); border-radius:4px;
+  background:var(--bg); color:var(--text); font-family:inherit; font-size:13px; outline:none;
+}
+.searchbox:focus{border-color:var(--accent);}
+.searchwrap svg{position:absolute; left:9px; top:50%; transform:translateY(-50%); opacity:.55; pointer-events:none;}
+.searchkbd{position:absolute; right:8px; top:50%; transform:translateY(-50%); font-size:10.5px; color:var(--text-faint); border:1px solid var(--border); border-radius:3px; padding:1px 5px; pointer-events:none;}
+.menuBtn{display:none; background:none; border:1px solid var(--border); border-radius:4px; padding:6px 8px; color:var(--text); cursor:pointer;}
+
+.results{
+  position:absolute; top:calc(100% + 6px); left:0; right:0; background:var(--bg);
+  border:1px solid var(--border); border-radius:6px; box-shadow:0 8px 24px rgba(0,0,0,.18);
+  max-height:60vh; overflow:auto; z-index:40;
+}
+.result-item{padding:9px 12px; border-bottom:1px solid var(--border); cursor:pointer;}
+.result-item:last-child{border-bottom:none;}
+.result-item:hover, .result-item.active{background:var(--bg-alt);}
+.result-term{font-weight:600; color:var(--accent);}
+.result-file{color:var(--text-faint); font-size:11px; margin-left:8px;}
+.result-def{color:var(--text-dim); font-size:12.5px; margin-top:2px;}
+.result-empty{padding:14px 12px; color:var(--text-faint); font-size:13px;}
+
+.shell{flex:1; display:flex; min-height:0;}
+
+.activitybar{
+  flex:0 0 44px; background:var(--bg-alt); border-right:1px solid var(--border);
+  display:flex; flex-direction:column; align-items:center; padding-top:10px; gap:4px;
+}
+.actbtn{
+  width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+  border-radius:5px; color:var(--text-dim); cursor:pointer; border:none; background:none;
+}
+.actbtn.active{color:var(--text); background:var(--bg);}
+.actbtn:hover{color:var(--text);}
+
+.sidebar{
+  flex:0 0 250px; background:var(--bg-alt); border-right:1px solid var(--border);
+  overflow-y:auto; padding:10px 0 20px;
+}
+.sidebar-title{padding:4px 16px 8px; font-size:11px; letter-spacing:.08em; color:var(--text-faint); text-transform:uppercase; font-weight:600;}
+.folder{padding:4px 16px 6px; font-size:12.5px; font-weight:600; color:var(--text-dim); display:flex; align-items:center; gap:6px;}
+.file-row{
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+  padding:6px 16px 6px 30px; cursor:pointer; color:var(--text-dim); font-size:12.5px; border-left:2px solid transparent;
+}
+.file-row:hover{background:rgba(120,120,120,.08);}
+.file-row.active{background:var(--bg); color:var(--text); border-left-color:var(--accent);}
+.file-row .fname{white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.file-row .fprog{font-size:10.5px; color:var(--text-faint); flex:0 0 auto;}
+.file-row.active .fprog{color:var(--accent-2);}
+
+.progress-panel{padding:6px 16px;}
+.progress-panel h3{font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-faint); margin:6px 0 12px;}
+.prog-row{margin-bottom:12px;}
+.prog-row .prow-top{display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px; color:var(--text-dim);}
+.prow-bar{height:6px; border-radius:3px; background:var(--border); overflow:hidden;}
+.prow-fill{height:100%; background:var(--accent-2); border-radius:3px;}
+.prog-total{margin-top:14px; padding-top:14px; border-top:1px solid var(--border); font-size:12.5px; color:var(--text);}
+
+.overlay{position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:30; display:none;}
+
+.main{flex:1; display:flex; flex-direction:column; min-width:0;}
+.tabbar{
+  display:flex; overflow-x:auto; background:var(--bg-tab-inactive); border-bottom:1px solid var(--border); flex:0 0 auto;
+}
+.tab{
+  display:flex; align-items:center; gap:8px; padding:9px 12px; font-size:12.5px; white-space:nowrap;
+  border-right:1px solid var(--border); background:var(--bg-tab-inactive); color:var(--text-dim); cursor:pointer;
+  border-top:2px solid transparent;
+}
+.tab.active{background:var(--bg-tab-active); color:var(--text); border-top-color:var(--accent);}
+.tab .close{opacity:.5; border-radius:3px; padding:0 3px;}
+.tab .close:hover{opacity:1; background:rgba(120,120,120,.2);}
+
+.editor{flex:1; overflow-y:auto; padding:28px 28px 80px;}
+.editor-inner{max-width:820px; margin:0 auto;}
+
+/* Roadmap page */
+.rm-title{font-size:22px; margin:0 0 4px;}
+.rm-sub{color:var(--text-dim); font-family:"IBM Plex Sans"; font-size:14.5px; margin:0 0 22px;}
+.rm-note{
+  background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--accent);
+  border-radius:6px; padding:14px 16px; margin-bottom:26px; font-size:13.5px; color:var(--text);
+}
+.rm-note b{color:var(--accent);}
+.rm-steps{list-style:none; margin:0; padding:0; counter-reset:step;}
+.rm-step{
+  counter-increment:step; display:flex; gap:14px; padding:14px 0; border-bottom:1px solid var(--border);
+}
+.rm-step:last-child{border-bottom:none;}
+.rm-step::before{
+  content:counter(step); flex:0 0 30px; height:30px; border-radius:6px; background:var(--code-bg);
+  border:1px solid var(--border); display:flex; align-items:center; justify-content:center;
+  font-family:"IBM Plex Mono"; font-size:13px; color:var(--accent); font-weight:600;
+}
+.rm-step-body h3{margin:2px 0 4px; font-size:14.5px;}
+.rm-step-body p{margin:0; color:var(--text-dim); font-size:13.5px;}
+.rm-step-file{color:var(--accent); cursor:pointer; text-decoration:underline; text-decoration-style:dotted;}
+.rm-howto{margin-top:26px; padding-top:20px; border-top:1px solid var(--border);}
+.rm-howto h3{font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-faint); margin:0 0 10px;}
+.rm-howto ul{margin:0; padding-left:18px; color:var(--text-dim); font-size:13.5px;}
+.rm-howto li{margin-bottom:6px;}
+
+/* Domain page */
+.dm-header{margin-bottom:22px; padding-bottom:16px; border-bottom:1px solid var(--border);}
+.dm-title{font-size:20px; margin:0 0 4px; color:var(--text);}
+.dm-blurb{color:var(--text-dim); font-family:"IBM Plex Sans"; font-size:13.5px; margin:0;}
+.section-heading{
+  font-family:"IBM Plex Mono"; color:var(--text-faint); font-size:12.5px; margin:26px 0 12px;
+  display:flex; align-items:center; gap:8px;
+}
+.section-heading::before{content:"//"; opacity:.6;}
+.section-heading::after{content:""; flex:1; height:1px; background:var(--border);}
+
+.term-card{
+  background:var(--card-bg); border:1px solid var(--border); border-radius:6px;
+  padding:12px 14px 13px; margin-bottom:10px; scroll-margin-top:20px;
+}
+.term-card.flash{animation:flash 2.2s ease-out;}
+@media (prefers-reduced-motion: reduce){ .term-card.flash{animation:none; background:var(--hl);} }
+@keyframes flash{ 0%{background:var(--hl);} 100%{background:var(--card-bg);} }
+.term-top{display:flex; align-items:flex-start; gap:10px;}
+.term-check{margin-top:3px; width:15px; height:15px; accent-color:var(--accent-2); flex:0 0 auto; cursor:pointer;}
+.term-name{font-weight:600; color:var(--accent); font-size:14.5px;}
+.term-def{color:var(--text); font-size:13.5px; margin:5px 0 0 25px;}
+.term-logic{color:var(--text-dim); font-size:13px; margin:7px 0 0 25px; padding-left:10px; border-left:2px solid var(--border);}
+.term-meta{margin:9px 0 0 25px; display:flex; flex-direction:column; gap:6px;}
+.term-ask, .term-anchor{font-size:12px; padding:5px 9px; border-radius:4px; display:block;}
+.term-ask{background:rgba(163,21,21,.08); color:var(--accent-3);}
+.term-anchor{background:rgba(10,110,76,.09); color:var(--accent-2);}
+.term-ask b, .term-anchor b{font-family:"IBM Plex Mono"; text-transform:uppercase; font-size:10px; letter-spacing:.06em; margin-right:6px;}
+.known .term-name{opacity:.5;}
+.known .term-def{opacity:.55;}
+
+@media (max-width:760px){
+  .searchwrap{max-width:none;}
+  .brand-label{display:none;}
+  .menuBtn{display:flex;}
+  .activitybar{display:none;}
+  .sidebar{position:fixed; top:0; bottom:0; left:0; width:78vw; max-width:300px; z-index:35;
+    transform:translateX(-100%); transition:transform .2s ease; padding-top:calc(10px + env(safe-area-inset-top,0px));}
+  .sidebar.open{transform:translateX(0);}
+  .overlay.show{display:block;}
+  .editor{padding:20px 16px 60px;}
+  .term-def, .term-logic, .term-meta{margin-left:0;}
+}
+</style>
+
+
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <button class="menuBtn" id="menuBtn" aria-label="Toggle file list">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M1 4h14M1 8h14M1 12h14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+    </button>
+    <div class="brand">
+      <span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span>
+      <span class="brand-label">interview-prep — the vocabulary stack</span>
+    </div>
+    <div class="searchwrap">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5.2" stroke="currentColor" stroke-width="1.4"/><path d="M11 11L14.5 14.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      <input class="searchbox" id="searchInput" placeholder="Search every term across all files…" autocomplete="off">
+      <span class="searchkbd" id="searchKbd">/</span>
+      <div class="results" id="results" hidden></div>
+    </div>
+  </div>
+
+  <div class="shell">
+    <div class="overlay" id="overlay"></div>
+    <div class="activitybar">
+      <button class="actbtn active" id="actExplorer" title="Explorer" aria-label="File explorer">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M1.5 3.5A1 1 0 012.5 2.5h3l1.2 1.6H13.5a1 1 0 011 1V12a1 1 0 01-1 1h-11a1 1 0 01-1-1V3.5z" stroke="currentColor" stroke-width="1.3"/></svg>
+      </button>
+      <button class="actbtn" id="actProgress" title="Progress" aria-label="Progress tracker">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M2 8.5l3 3 8-8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+
+    <nav class="sidebar" id="sidebar">
+      <div id="sidebarExplorer">
+        <div class="sidebar-title">Explorer</div>
+        <div class="folder">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M1.5 3.5A1 1 0 012.5 2.5h3l1.2 1.6H13.5a1 1 0 011 1V12a1 1 0 01-1 1h-11a1 1 0 01-1-1V3.5z" stroke="currentColor" stroke-width="1.2"/></svg>
+          INTERVIEW-PREP
+        </div>
+        <div id="fileList"></div>
+      </div>
+      <div id="sidebarProgress" class="progress-panel" hidden></div>
+    </nav>
+
+    <main class="main">
+      <div class="tabbar" id="tabbar"></div>
+      <div class="editor" id="editor"><div class="editor-inner" id="editorInner"></div></div>
+    </main>
+  </div>
+</div>
+
+<script>
+window.CHEATSHEET_DATA = [
+{
+  id:"fundamentals", file:"01_fundamentals.py", title:"Programming Fundamentals",
+  blurb:"The vocabulary underneath every language: how work is organized, how cost is measured, how state is managed.",
+  sections:[
+    { h:"Paradigms", terms:[
+      {t:"Object-Oriented Programming (OOP)", d:"Organizes code around objects that bundle state (data) with the behavior that acts on it.", l:"Rests on four ideas: encapsulation (hide internal state behind methods), inheritance (share behavior down a class hierarchy), polymorphism (the same call behaves differently depending on the object's actual type), and abstraction (expose what an object does, not how). Interviewers care most that you can explain why you'd reach for one of these, not just define them."},
+      {t:"Encapsulation", d:"Bundling data with the methods that operate on it, and hiding the data behind a controlled interface.", l:"A class exposes getters/setters or public methods instead of public fields, so the internal representation can change without breaking callers.", a:"Why not just make every field public?"},
+      {t:"Inheritance", d:"A class acquires the fields and methods of a parent class.", l:"Good for genuine is-a relationships (a Dog is an Animal); overused, it creates rigid hierarchies that are why 'favor composition over inheritance' is a common interview talking point."},
+      {t:"Polymorphism", d:"Different types respond to the same method call in their own way.", l:"Compile-time (method overloading) vs runtime (method overriding via inheritance/interfaces) — runtime polymorphism is what lets you write code against an interface and swap implementations underneath it."},
+      {t:"Functional Programming (FP)", d:"Builds programs by composing pure functions instead of mutating shared state.", l:"Pure functions always return the same output for the same input and cause no side effects, which is what makes them easy to test and to run in parallel safely.", p:"The GS BULK PI correction logic is closer to this style: a raw row goes in, a corrected row comes out, with no hidden state carried between rows."},
+      {t:"Imperative vs Declarative", d:"Imperative code states the exact steps to reach a result; declarative code states the desired result and lets something else figure out the steps.", l:"A for-loop that builds an array is imperative; array.map() that does the same thing is declarative. SQL and React's JSX are both declarative."},
+    ]},
+    { h:"Measuring Cost", terms:[
+      {t:"Big-O Notation", d:"Describes how an algorithm's runtime or memory grows as input size grows, ignoring constants.", l:"You drop constants and lower-order terms — O(n) beats O(n²) for large enough n regardless of which has the smaller constant factor at small n. It's a growth-rate comparison, not a stopwatch reading.", a:"What's the time complexity of this, and can you do better?"},
+      {t:"Time vs Space Complexity", d:"Time complexity measures how runtime scales with input; space complexity measures how memory use scales.", l:"They often trade off — memoization spends space to save time. Interviewers expect you to state both, and to justify the trade you picked."},
+      {t:"Big-Ω and Big-Θ", d:"Big-O gives an upper bound (worst case); Big-Omega gives a lower bound (best case); Big-Theta means the upper and lower bounds match — the algorithm's growth rate is known exactly.", l:"In interviews people say 'Big-O' loosely to mean 'the tight bound', which is technically Big-Theta — knowing the distinction signals precision."},
+      {t:"Amortized Complexity", d:"The average cost per operation over a worst-case sequence of operations, not the cost of any single one.", l:"A dynamic array's append is O(1) amortized: most appends are O(1), but occasionally one triggers an O(n) resize — spread across all appends, the average stays O(1)."},
+    ]},
+    { h:"Core Mechanics", terms:[
+      {t:"Recursion", d:"A function that solves a problem by calling itself on a smaller version of the same problem.", l:"Needs a base case (when to stop) and a recursive case (how to shrink the problem). Every recursive call adds a frame to the call stack, which is why unbounded recursion causes a stack overflow."},
+      {t:"Memoization", d:"Caching the results of expensive function calls so repeated calls with the same input return instantly.", l:"Turns exponential recursive solutions (like naive Fibonacci) into linear ones by never recomputing a subproblem twice — the bridge concept into dynamic programming."},
+      {t:"Pass by Value vs Reference", d:"Pass by value copies the data into the function; pass by reference passes a pointer to the original data, so changes inside the function affect the caller's copy.", l:"Most languages pass primitives by value and objects/arrays by reference (technically 'by value of the reference') — this is a classic 'what does this code print' trick question."},
+      {t:"Immutability", d:"Data that cannot be changed after it's created — any 'change' produces a new value instead.", l:"Makes state predictable and safe to share across functions or threads without locks, at the cost of extra allocations. React and Redux lean on this heavily: never mutate state directly, always return a new object."},
+    ]},
+  ]
+},
+{
+  id:"dsa", file:"02_dsa.cpp", title:"Data Structures & Algorithms",
+  blurb:"The single biggest interview-vocabulary gap for most working developers — you use these ideas daily without ever naming them.",
+  sections:[
+    { h:"Linear Structures", terms:[
+      {t:"Array", d:"A fixed-layout, contiguous block of memory holding elements of the same type, accessed by index.", l:"O(1) random access because the address of any index is a direct calculation, but inserting/removing in the middle is O(n) since everything after has to shift."},
+      {t:"Linked List", d:"A chain of nodes where each node holds a value and a pointer to the next (and, if doubly-linked, the previous) node.", l:"O(1) insertion/removal once you have a reference to the spot, but O(n) to reach that spot since there's no random access — the classic trade-off against arrays."},
+      {t:"Stack", d:"A Last-In-First-Out (LIFO) structure — the last thing pushed is the first thing popped.", l:"Underlies function call frames (the call stack), undo history, and expression parsing (matching brackets, evaluating postfix notation)."},
+      {t:"Queue", d:"A First-In-First-Out (FIFO) structure — the first thing enqueued is the first thing dequeued.", l:"Used anywhere work has to be processed in arrival order — task schedulers, print queues, breadth-first search's frontier.", p:"A background job queue is the right shape for World Shiner's multi-location job pipeline: jobs enter and get processed roughly in the order they arrive."},
+      {t:"Deque (Double-Ended Queue)", d:"A queue that allows insertion and removal from both ends in O(1).", l:"Used when you need both stack-like and queue-like behavior — the classic 'sliding window maximum' problem is solved with one."},
+      {t:"Priority Queue", d:"A queue where each element has a priority, and the highest (or lowest) priority element always comes out first, not the oldest one.", l:"Usually implemented with a heap so both insertion and extraction are O(log n) instead of O(n) for a naive sorted-list approach."},
+    ]},
+    { h:"Hashing", terms:[
+      {t:"Hash Table / Hash Map", d:"A structure that maps keys to values using a hash function to compute an index, giving average O(1) lookup, insert, and delete.", l:"The hash function converts a key into an array index; a good one spreads keys evenly so lookups stay close to O(1) instead of degrading toward O(n)."},
+      {t:"Hash Collision", d:"When two different keys hash to the same index.", l:"Resolved either by chaining (each bucket holds a small list of entries) or open addressing (probe for the next free slot) — worth naming both if asked how a hash map actually works under the hood."},
+      {t:"Load Factor", d:"The ratio of stored entries to total bucket count in a hash table.", l:"When it crosses a threshold (commonly ~0.75), the table resizes and rehashes everything — the O(1) average case assumes this resizing keeps the load factor bounded."},
+    ]},
+    { h:"Trees & Graphs", terms:[
+      {t:"Binary Tree", d:"A tree where each node has at most two children, usually called left and right.", l:"The base shape for describing hierarchical data — file systems, comment threads, UI component trees."},
+      {t:"Binary Search Tree (BST)", d:"A binary tree where every left descendant is smaller and every right descendant is larger than the node itself.", l:"Gives O(log n) search, insert, and delete on average — but degrades to O(n) if the tree becomes unbalanced (e.g. inserting already-sorted data), which is why balanced variants exist."},
+      {t:"Balanced Trees (AVL / Red-Black)", d:"Self-balancing BSTs that restructure themselves on insert/delete to guarantee O(log n) operations.", l:"You rarely implement one from scratch in an interview, but naming why they exist (to prevent BST degradation) is usually enough."},
+      {t:"Heap", d:"A tree-based structure where every parent is smaller (min-heap) or larger (max-heap) than its children — the root is always the min or max.", l:"Backs priority queues; insert and extract-min/max are both O(log n), and peeking at the min/max is O(1)."},
+      {t:"Trie (Prefix Tree)", d:"A tree where each path from the root spells out a prefix, used to store and search strings efficiently.", l:"Autocomplete and spell-check are the canonical use cases — searching for all words with a given prefix is O(prefix length), not O(number of words)."},
+      {t:"Graph", d:"A set of nodes (vertices) connected by edges, which can be directed or undirected, weighted or unweighted.", l:"Represented either as an adjacency matrix (fast edge lookup, O(V²) space) or an adjacency list (space-efficient for sparse graphs, the default choice in most interviews)."},
+      {t:"Breadth-First Search (BFS)", d:"Explores a graph level by level, visiting all neighbors before moving further out, using a queue.", l:"Finds the shortest path in an unweighted graph because it always reaches a node via the fewest possible edges first."},
+      {t:"Depth-First Search (DFS)", d:"Explores a graph by going as deep as possible down one path before backtracking, using a stack (or recursion).", l:"Natural for exploring all possibilities — detecting cycles, topological sorting, counting connected components."},
+    ]},
+    { h:"Sorting, Searching & Techniques", terms:[
+      {t:"Merge Sort", d:"A divide-and-conquer sort that splits the array in half recursively, sorts each half, then merges them back together.", l:"Guaranteed O(n log n) in every case and stable (equal elements keep their relative order), at the cost of O(n) extra space."},
+      {t:"Quicksort", d:"Picks a pivot, partitions elements smaller/larger than it, then recursively sorts each partition.", l:"O(n log n) on average but O(n²) worst case (e.g. an already-sorted array with a bad pivot choice) — the classic follow-up is 'how would you avoid the worst case?' (randomized or median-of-three pivot)."},
+      {t:"Binary Search", d:"Finds a target in a sorted array by repeatedly halving the search range.", l:"O(log n) — but only works on sorted data, which is the detail people forget to mention."},
+      {t:"Two Pointers", d:"Using two index variables that move through a structure (often from both ends, or at different speeds) instead of nested loops.", l:"Turns many O(n²) brute-force problems (pair sums, removing duplicates from a sorted array) into O(n)."},
+      {t:"Sliding Window", d:"Maintains a running subarray/substring 'window' that expands and contracts as you scan through data once.", l:"The standard technique for 'longest/shortest substring with property X' problems — avoids recomputing the whole window from scratch at each step."},
+      {t:"Dynamic Programming (DP)", d:"Solving a problem by breaking it into overlapping subproblems, solving each once, and reusing the results.", l:"The two markers to name explicitly: optimal substructure (the best solution is built from best solutions to subproblems) and overlapping subproblems (the same subproblem recurs, which is what makes caching worthwhile)."},
+      {t:"Greedy Algorithms", d:"Makes the locally best choice at each step, hoping it leads to a globally best solution.", l:"Faster and simpler than DP when it works, but it doesn't always produce the optimal answer — proving a greedy approach is correct is often the actual interview question."},
+      {t:"Backtracking", d:"Builds a solution incrementally and abandons ('backtracks from') a path as soon as it can't possibly lead to a valid answer.", l:"Used for combinatorial problems — generating permutations, solving Sudoku, N-Queens — where you explore a decision tree and prune dead branches early."},
+      {t:"Divide and Conquer", d:"Breaks a problem into independent subproblems, solves each recursively, then combines the results.", l:"The general pattern behind merge sort and binary search; distinguished from DP by the subproblems not overlapping, so there's nothing to cache."},
+    ]},
+  ]
+},
+{
+  id:"databases", file:"03_databases.sql", title:"Databases & Data Modeling",
+  blurb:"How data is structured, kept consistent, and made fast to query at whatever scale you're operating at.",
+  sections:[
+    { h:"Relational Basics", terms:[
+      {t:"ACID", d:"Atomicity, Consistency, Isolation, Durability — the four guarantees a database transaction makes.", l:"Atomicity: a transaction fully happens or fully doesn't. Consistency: it only moves the database from one valid state to another. Isolation: concurrent transactions don't see each other's half-finished work. Durability: once committed, it survives a crash.", p:"Firestore batched writes in GS BULK PI and the Customs Composer give you atomicity for free — either the whole batch of corrected rows commits or none does."},
+      {t:"Normalization", d:"Structuring relational tables to reduce redundant data, typically described in stages called normal forms (1NF, 2NF, 3NF).", l:"1NF: each column holds atomic, single values. 2NF: no partial dependency on part of a composite key. 3NF: no column depends on a non-key column. Over-normalizing costs you extra joins; under-normalizing costs you data-consistency bugs."},
+      {t:"Primary Key / Foreign Key", d:"A primary key uniquely identifies a row in its own table; a foreign key is a column in one table that references a primary key in another, enforcing a relationship.", l:"Foreign keys are what a database uses to guarantee referential integrity — you can't have an order pointing at a customer that doesn't exist."},
+      {t:"Joins", d:"Combining rows from two or more tables based on a related column.", l:"Inner join keeps only matching rows in both tables; left/right (outer) join keeps all rows from one side even without a match, filling the rest with nulls; full outer join keeps all rows from both sides."},
+    ]},
+    { h:"Performance", terms:[
+      {t:"Index", d:"An auxiliary data structure that lets the database find rows without scanning the whole table.", l:"Usually a B-Tree under the hood — trades write speed and storage for dramatically faster reads on the indexed column(s). Indexing every column isn't free: each index slows down every insert/update.", p:"Places Enrichment Console's name/address matching is exactly the kind of lookup that lives or dies on whether the right column is indexed."},
+      {t:"Query Execution Plan", d:"The step-by-step strategy a database chooses to run a given query (which indexes it uses, in what order it joins tables).", l:"Reading one (via EXPLAIN in most SQL databases) is how you actually diagnose a slow query instead of guessing."},
+      {t:"N+1 Query Problem", d:"Fetching a list of N records, then running one additional query per record to get related data — N+1 total queries instead of one or two.", l:"A classic ORM footgun: looping over users and calling user.orders inside the loop instead of eager-loading orders alongside users in a single query."},
+    ]},
+    { h:"Scaling Data", terms:[
+      {t:"Replication", d:"Keeping copies of the same data on multiple database servers.", l:"Usually one primary (handles writes) with several replicas (handle reads), which both improves read throughput and gives you a failover target if the primary goes down."},
+      {t:"Sharding / Partitioning", d:"Splitting one large dataset across multiple database instances, each holding a subset of the rows.", l:"Partitioning usually means splitting within one server (e.g. by date range); sharding means splitting across separate servers (e.g. by customer ID hash) — the term people conflate in interviews, so define which one you mean."},
+      {t:"CAP Theorem", d:"A distributed data store can only fully guarantee two of Consistency, Availability, and Partition tolerance at the same time.", l:"Since network partitions are a fact of life in any real distributed system, the actual choice in practice is between consistency and availability when a partition happens. Covered in depth in the System Design track — this is the one-line version."},
+    ]},
+    { h:"SQL vs NoSQL", terms:[
+      {t:"SQL vs NoSQL", d:"SQL databases store structured, related data in fixed-schema tables; NoSQL databases trade some of that structure for flexibility and horizontal scale.", l:"The real decision criteria: how relational is your data, how much your schema changes over time, and how you need to scale reads/writes — not which one is 'newer' or 'better'.", p:"GS BULK PI and the Customs Clearance Composer both use Firestore (a document database) for the glossary/dictionary lookups, since each entry is a flexible, mostly-independent document rather than a row in a rigid relational schema."},
+      {t:"Document / Key-Value / Column-Family / Graph DB", d:"The four common NoSQL shapes: documents (JSON-like records, e.g. Firestore/MongoDB), key-value (a giant hash map, e.g. Redis), column-family (optimized for huge sparse tables, e.g. Cassandra), and graph (nodes and edges as first-class citizens, e.g. Neo4j).", l:"Naming which shape fits a given problem (and why) is a stronger answer than just saying 'I'd use NoSQL'."},
+      {t:"Eventual Consistency", d:"A guarantee that if no new updates happen, all replicas will eventually converge to the same value — but a read right after a write might not reflect it yet.", l:"The trade-off most NoSQL and distributed systems make for higher availability and lower latency, versus the strong consistency a traditional single-node SQL database gives you by default."},
+    ]},
+    { h:"Working With Data", terms:[
+      {t:"ORM (Object-Relational Mapper)", d:"A library that lets you interact with a database using your programming language's objects instead of writing raw SQL.", l:"Speeds up development and reduces SQL-injection risk, but can hide expensive queries (see N+1) behind innocent-looking code — knowing when to drop to raw SQL is the senior-level answer."},
+      {t:"Migration", d:"A version-controlled, incremental change to a database schema (add a column, create a table) that can be applied or rolled back.", l:"Lets a schema evolve alongside application code without hand-editing production databases."},
+      {t:"Connection Pooling", d:"Reusing a fixed set of open database connections across requests instead of opening a new one every time.", l:"Opening a connection is expensive relative to a query — pooling is often the single biggest fix for a backend that falls over under load."},
+    ]},
+  ]
+},
+{
+  id:"backend", file:"04_backend.js", title:"Backend & API Design",
+  blurb:"How a server talks to the outside world, and how it decides who's allowed to ask for what.",
+  sections:[
+    { h:"HTTP Basics", terms:[
+      {t:"HTTP Methods", d:"GET reads a resource, POST creates one, PUT replaces one entirely, PATCH partially updates one, DELETE removes one.", l:"Picking the right verb communicates intent — using POST for everything works but signals you haven't thought about the API's contract."},
+      {t:"Status Codes", d:"3-digit codes summarizing the result of an HTTP request: 2xx success, 3xx redirect, 4xx client error, 5xx server error.", l:"Knowing the specific ones cold matters: 200 OK, 201 Created, 204 No Content, 301/302 redirect, 400 Bad Request, 401 Unauthorized (not authenticated), 403 Forbidden (authenticated but not allowed), 404 Not Found, 429 Too Many Requests, 500 Internal Server Error."},
+      {t:"Idempotency", d:"An operation is idempotent if calling it once or many times with the same input produces the same result.", l:"GET, PUT, and DELETE are supposed to be idempotent; POST generally isn't (calling it twice creates two things). Matters most for safe retry logic over an unreliable network."},
+      {t:"Statelessness", d:"Each request contains everything the server needs to process it — the server keeps no memory of previous requests from that client.", l:"REST's defining constraint. It's what lets you add more servers behind a load balancer without worrying about which one 'remembers' a given user."},
+    ]},
+    { h:"API Styles", terms:[
+      {t:"REST", d:"An architectural style where resources (nouns, like /users/42) are manipulated using standard HTTP methods.", l:"Simple, cacheable, and widely understood — the default choice unless you have a specific reason to reach for something else.", p:"The Places Enrichment Console's FastAPI backend and the Procurement Request Form's data flow are both essentially REST-shaped: resources in, HTTP verbs describing what to do with them."},
+      {t:"GraphQL", d:"A query language where the client specifies exactly which fields it needs, and the server returns exactly that shape.", l:"Solves REST's over-fetching (getting fields you don't need) and under-fetching (needing multiple round trips) problems, at the cost of more complex server-side setup and caching."},
+      {t:"RPC / gRPC", d:"Remote Procedure Call — the client calls a function that runs on a remote server as if it were local. gRPC is Google's modern, binary-protocol implementation of this idea.", l:"Faster than REST/JSON for service-to-service calls because of its binary format (Protocol Buffers) and HTTP/2 transport, but less human-readable and browser-friendly."},
+      {t:"Webhook", d:"A callback: instead of a client polling a server for updates, the server pushes an HTTP request to a URL the client registered in advance, when an event happens.", l:"The inverse of a normal API call — 'don't call us, we'll call you.' Payment providers and shipping carriers use these heavily for status updates."},
+    ]},
+    { h:"Authentication & Authorization", terms:[
+      {t:"Authentication vs Authorization", d:"Authentication answers 'who are you?'; authorization answers 'what are you allowed to do?'.", l:"A 401 response means authentication failed (or wasn't provided); a 403 means you were identified but aren't allowed to do that action — mixing these two up is a common interview slip."},
+      {t:"Session-Based Auth", d:"After login, the server creates a session record and gives the client a session ID (usually in a cookie); the server looks up that ID on every request.", l:"Simple and easy to revoke (just delete the session server-side), but requires the server to store session state, which complicates horizontal scaling unless sessions are shared (e.g. in Redis)."},
+      {t:"JWT (JSON Web Token)", d:"A signed token containing claims (like user ID and expiry) that the server can verify without looking anything up in a database.", l:"Stateless — any server holding the signing secret can verify the token, which is why it fits multi-server backends well. The trade-off: you can't easily revoke one before it expires, since nothing is tracked server-side.", p:"World Shiner's multi-location login is the kind of system where this choice — session cookie vs JWT — directly decides how easy it is to add another location's server later."},
+      {t:"OAuth 2.0", d:"A protocol that lets a user grant a third-party app limited access to their data on another service, without sharing their password.", l:"'Sign in with Google' is OAuth: your app never sees the user's Google password, only a token scoped to what they approved."},
+      {t:"Role-Based Access Control (RBAC)", d:"Permissions are attached to roles (admin, editor, viewer), and users are assigned one or more roles.", l:"Keeps authorization logic centralized and readable — you check 'does this role allow this action' instead of scattering per-user permission checks through the codebase."},
+    ]},
+    { h:"Server Architecture", terms:[
+      {t:"Middleware", d:"A function that sits between the incoming request and the final route handler, able to inspect, modify, or reject the request.", l:"The standard place to put cross-cutting concerns — auth checks, logging, rate limiting — so individual route handlers don't have to repeat that logic."},
+      {t:"MVC (Model-View-Controller)", d:"Separates an app into data/business logic (Model), what the user sees (View), and the glue that connects user input to model updates (Controller).", l:"Keeps concerns separated so, for example, you can change the UI without touching business logic — the reasoning behind most 'why organize code this way' questions."},
+      {t:"Rate Limiting", d:"Capping how many requests a client can make in a given time window.", l:"Protects a backend (and any third-party API it calls) from being overwhelmed — usually implemented with a token-bucket or sliding-window counter.", p:"Anything calling the Google Places API in the enrichment pipeline needs this, since that API itself enforces a quota per key."},
+    ]},
+  ]
+},
+{
+  id:"frontend", file:"05_frontend.jsx", title:"Frontend Engineering",
+  blurb:"What actually happens between your code and pixels on a screen.",
+  sections:[
+    { h:"The Browser", terms:[
+      {t:"DOM (Document Object Model)", d:"The browser's in-memory tree representation of an HTML page, which JavaScript can read and modify.", l:"Every element, attribute, and text node is an object in this tree — 'manipulating the DOM' means changing this tree, which the browser then re-renders."},
+      {t:"Critical Rendering Path", d:"The sequence of steps a browser takes to turn HTML/CSS/JS into pixels: parse HTML into the DOM, parse CSS into the CSSOM, combine them into a render tree, compute layout, then paint.", l:"Understanding this is what lets you reason about why a render-blocking script or an unoptimized stylesheet slows down first paint."},
+      {t:"Reflow vs Repaint", d:"Reflow recalculates the layout (positions/sizes) of elements; repaint just redraws pixels without changing layout.", l:"Reflow is far more expensive because it can cascade to the whole page. Changing an element's color triggers a repaint; changing its width can trigger a reflow of everything after it."},
+      {t:"Event Loop", d:"The mechanism that lets JavaScript, a single-threaded language, handle asynchronous work without blocking.", l:"The call stack runs synchronous code; once it's empty, the event loop pulls the next task from a queue (a resolved promise's callback, a setTimeout, a click handler) and runs it. This is why setTimeout(fn, 0) still runs after all current synchronous code."},
+    ]},
+    { h:"React / Component Model", terms:[
+      {t:"Virtual DOM", d:"An in-memory, lightweight copy of the real DOM that a UI library (like React) uses to figure out the minimum set of real DOM changes needed.", l:"Direct DOM manipulation is slow; the library diffs the new virtual tree against the previous one and only applies the actual differences, batching them into one real update.", p:"World Shiner's PWA dashboard, if built in React, leans on exactly this to keep the job list snappy while jobs update in real time."},
+      {t:"Component Lifecycle", d:"The stages a UI component goes through: mounting (created and inserted), updating (re-rendered due to new props/state), and unmounting (removed).", l:"In modern React, useEffect replaces the old lifecycle methods — its dependency array controls whether it behaves like mount, update, or both."},
+      {t:"Hooks (useState / useEffect)", d:"Functions that let a functional component hold state (useState) and run side effects like data fetching (useEffect) without being written as a class.", l:"useState triggers a re-render when its value changes; useEffect runs after render and re-runs only when something in its dependency array changes — forgetting a dependency is the single most common React bug."},
+      {t:"State Management", d:"How an application tracks and updates data that affects what's rendered, and how that data is shared across components.", l:"Local component state is fine until multiple distant components need the same data — then you reach for lifting state up, Context, or a dedicated store (Redux, Zustand)."},
+      {t:"Props Drilling vs Context", d:"Props drilling passes data down through several layers of components that don't need it themselves, just to reach one that does. Context lets any descendant read shared data directly.", l:"Context solves drilling but re-renders every consumer when the value changes, so it's not a free replacement for a proper state-management library at scale."},
+    ]},
+    { h:"Layout & Styling", terms:[
+      {t:"Box Model", d:"Every element is a box made of content, padding, border, and margin, in that order from the inside out.", l:"box-sizing: border-box (which most resets set) makes width/height include padding and border, instead of the default behavior where they only cover content — the source of a lot of 'why is my layout 20px too wide' bugs."},
+      {t:"Flexbox", d:"A one-dimensional layout model for arranging items in a row or column, with control over spacing, alignment, and wrapping.", l:"Best for distributing items along a single axis — a navbar, a card's internal layout, centering something."},
+      {t:"CSS Grid", d:"A two-dimensional layout model for arranging items into rows and columns at once.", l:"Best when you're laying out a whole page or a genuinely grid-shaped structure, rather than a single row or column."},
+      {t:"Specificity & Cascade", d:"The rules that decide which CSS rule wins when multiple rules target the same element.", l:"Roughly: inline styles beat IDs, IDs beat classes/attributes/pseudo-classes, classes beat element selectors — and among equal specificity, the rule declared later wins."},
+    ]},
+    { h:"Performance", terms:[
+      {t:"Lazy Loading", d:"Deferring the loading of a resource (an image, a route's JS bundle) until it's actually needed.", l:"Cuts initial load time by not shipping code or assets the user might never scroll to or navigate to."},
+      {t:"Code Splitting", d:"Breaking a single large JS bundle into smaller chunks that load on demand.", l:"Usually done per-route, so a user visiting the login page doesn't have to download the code for the admin dashboard too."},
+      {t:"Debounce vs Throttle", d:"Debounce delays running a function until a pause in events; throttle runs it at most once per fixed interval regardless of how many events fire.", l:"Debounce a search-as-you-type input (wait until they stop typing); throttle a scroll handler (run it at most every 100ms, no matter how fast they scroll)."},
+      {t:"PWA (Progressive Web App) / Service Worker", d:"A web app that can be installed like a native app and work offline, powered by a service worker — a background script that intercepts network requests.", l:"The service worker caches assets and can serve them when there's no network, and can also receive push notifications — the exact mechanism behind an installable, offline-capable tool.", p:"This is the literal mechanism behind World Shiner being a multi-location, installable PWA — the service worker is what lets a job get looked up even with a spotty factory-floor connection."},
+    ]},
+  ]
+},
+{
+  id:"systemdesign", file:"06_system_design.yml", title:"System Design & Scalability",
+  blurb:"The condensed index card for this area — the full 12-week System Design Mastery course is the deep version.",
+  sections:[
+    { h:"Scaling Compute", terms:[
+      {t:"Vertical vs Horizontal Scaling", d:"Vertical scaling adds more power (CPU/RAM) to one machine; horizontal scaling adds more machines and spreads the load across them.", l:"Vertical scaling is simpler but hits a hard ceiling and creates a single point of failure; horizontal scaling has no real ceiling but requires the application to be designed to run on many machines at once (statelessness matters here)."},
+      {t:"Load Balancer", d:"A component that distributes incoming requests across multiple servers.", l:"Lets you scale horizontally and survive one server going down; common strategies are round-robin, least-connections, and IP-hash (for keeping a client on the same server)."},
+      {t:"CDN (Content Delivery Network)", d:"A network of geographically distributed servers that cache and serve static content close to the requesting user.", l:"Cuts latency (physical distance to the server) and offloads traffic from your origin server — the reason static assets load fast no matter where in the world someone is."},
+    ]},
+    { h:"Caching", terms:[
+      {t:"Caching", d:"Storing a copy of expensive-to-compute or expensive-to-fetch data somewhere faster to access.", l:"Cache-aside: the app checks the cache first, and on a miss, fetches from the source and populates the cache. Write-through: every write goes to the cache and the source at the same time, keeping them always in sync at the cost of slower writes.", p:"A cache in front of repeated Google Places API lookups for the same store name/address would directly cut both latency and API quota usage in the enrichment pipeline."},
+      {t:"Cache Invalidation", d:"Deciding when cached data is stale and needs to be refreshed or removed.", l:"Famously one of the two hard problems in computer science (along with naming things) — strategies include a time-based expiry (TTL), or explicitly clearing the cache entry the moment the underlying data changes."},
+    ]},
+    { h:"Consistency at Scale", terms:[
+      {t:"CAP Theorem", d:"A distributed system can only fully guarantee two of Consistency, Availability, and Partition tolerance.", l:"Since network partitions will happen, the real-world choice is consistency vs availability during a partition — a payment system usually picks consistency (CP), a social feed usually picks availability (AP)."},
+      {t:"Strong vs Eventual Consistency", d:"Strong consistency means every read gets the latest write immediately; eventual consistency means reads might return stale data for a short window after a write.", l:"Eventual consistency is what lets systems scale globally without every replica synchronously agreeing on every write."},
+    ]},
+    { h:"Async & Messaging", terms:[
+      {t:"Message Queue", d:"A buffer that holds messages between a producer and a consumer, so they don't have to be online or fast at the same time.", l:"Decouples services — if the consumer is slow or briefly down, messages wait in the queue instead of being lost or blocking the producer."},
+      {t:"Pub/Sub (Publish-Subscribe)", d:"Publishers send messages to a topic without knowing who's listening; any number of subscribers can receive each message.", l:"Different from a queue in that a queue typically delivers each message to one consumer, while pub/sub can fan the same message out to many."},
+      {t:"Event-Driven Architecture", d:"Services communicate by emitting and reacting to events, rather than calling each other directly.", l:"Loosens coupling between services — a service that emits 'order placed' doesn't need to know or care which other services react to it."},
+    ]},
+    { h:"Architecture Styles", terms:[
+      {t:"Monolith vs Microservices", d:"A monolith is one deployable application containing all functionality; microservices split functionality into independently deployable services.", l:"Monoliths are simpler to develop, test, and deploy early on; microservices scale team and system size independently but add real operational complexity (network calls, distributed debugging, data consistency across services)."},
+      {t:"API Gateway", d:"A single entry point that routes client requests to the right backend service, often also handling auth, rate limiting, and logging in one place.", l:"Saves every microservice from reimplementing the same cross-cutting concerns."},
+      {t:"Circuit Breaker", d:"A pattern that stops calling a failing downstream service for a cooldown period, instead of retrying and piling up failures.", l:"Prevents one failing service from cascading into a system-wide outage — after the cooldown, it lets through a trial request to see if the service has recovered."},
+    ]},
+  ]
+},
+{
+  id:"osnet", file:"07_os_networking.c", title:"OS, Networking & Concurrency",
+  blurb:"What's actually happening below your code — in the operating system and on the wire.",
+  sections:[
+    { h:"Operating Systems", terms:[
+      {t:"Process vs Thread", d:"A process is an independent running program with its own memory space; a thread is a unit of execution within a process that shares that memory with other threads in the same process.", l:"Threads are cheaper to create and communicate (shared memory) but that sharing is exactly what causes race conditions; processes are isolated and safer but heavier and need explicit inter-process communication to share data."},
+      {t:"Context Switching", d:"The OS saving the state of a running process/thread and loading the state of another, so multiple tasks share one CPU.", l:"Not free — too much context switching (thrashing) wastes CPU time on bookkeeping instead of actual work."},
+      {t:"Deadlock", d:"Two or more processes/threads each hold a resource the other needs, and neither can proceed.", l:"Classically requires four conditions at once (mutual exclusion, hold-and-wait, no preemption, circular wait) — breaking any one prevents deadlock, which is the usual follow-up question."},
+      {t:"Stack vs Heap Memory", d:"The stack holds function calls and local variables with automatic, LIFO cleanup; the heap holds dynamically allocated memory that persists until explicitly freed (or garbage collected).", l:"Stack allocation is fast and automatic but limited in size (hence stack overflow on deep recursion); heap allocation is flexible but slower and, in non-garbage-collected languages, your responsibility to free."},
+      {t:"Virtual Memory", d:"An abstraction that gives each process its own private address space, mapped by the OS to physical RAM (and disk, when RAM is full).", l:"Lets processes be isolated from each other and lets the system run programs that need more memory than physically exists, at the cost of a translation layer (page tables) and possible slowdown (paging/swapping)."},
+    ]},
+    { h:"Concurrency", terms:[
+      {t:"Concurrency vs Parallelism", d:"Concurrency is structuring a program to handle multiple tasks that make progress in overlapping time periods; parallelism is literally running multiple tasks at the exact same instant on multiple cores.", l:"You can have concurrency on a single core (via fast task-switching, like JS's event loop) without any true parallelism — a distinction interviewers specifically probe for."},
+      {t:"Race Condition", d:"A bug that occurs when the outcome of code depends on the unpredictable timing of concurrent operations.", l:"Classic example: two threads both read a counter's current value, both increment it, both write back — one increment is silently lost."},
+      {t:"Mutex / Semaphore", d:"A mutex allows only one thread at a time into a protected section of code; a semaphore allows up to N threads at a time.", l:"A mutex is really a semaphore with a count of 1 — naming that relationship is a good sign of real understanding, not memorized definitions."},
+      {t:"Async/Await vs Threads", d:"Async/await lets one thread juggle many waiting operations (like network calls) without blocking; multithreading runs genuinely separate execution streams, often on separate cores.", l:"Async/await is about not wasting time waiting on I/O; threads are about doing CPU-bound work in parallel. Using threads for I/O-bound waiting, or async for CPU-bound crunching, is a common design mistake to be able to call out."},
+    ]},
+    { h:"Networking", terms:[
+      {t:"TCP vs UDP", d:"TCP is connection-oriented and guarantees ordered, reliable delivery; UDP is connectionless and sends packets with no guarantee of order or delivery.", l:"TCP's guarantees cost overhead (acknowledgements, retransmission), so UDP is preferred where speed matters more than perfection — video calls, live game state, DNS lookups."},
+      {t:"Three-Way Handshake", d:"The SYN, SYN-ACK, ACK exchange that establishes a TCP connection before any data flows.", l:"Both sides confirm they can send and receive before committing to the connection — it's why TCP has a small latency cost before the first byte of actual data moves."},
+      {t:"DNS Resolution", d:"Translating a human-readable domain name into an IP address.", l:"Goes through a chain — browser cache, OS cache, resolver, root servers, TLD servers, authoritative name server — with caching (TTL) at every layer to avoid repeating the full lookup on every request."},
+      {t:"HTTP vs HTTPS / TLS", d:"HTTPS is HTTP layered on top of TLS, which encrypts the connection and verifies the server's identity via a certificate.", l:"The TLS handshake negotiates encryption keys before any HTTP data is sent, which is why HTTPS has a small extra round-trip cost on first connection (mitigated by session resumption)."},
+      {t:"WebSockets", d:"A protocol that upgrades an HTTP connection into a persistent, full-duplex channel where either side can push data at any time.", l:"Unlike regular HTTP request/response, neither side has to ask — the server can push a message the moment something happens, which is what real-time features (live chat, live dashboards) need."},
+    ]},
+  ]
+},
+{
+  id:"devops", file:"08_devops.yaml", title:"DevOps, Cloud & Version Control",
+  blurb:"How code actually gets from a laptop to something users can reach — the part that isn't 'writing the feature'.",
+  sections:[
+    { h:"Version Control", terms:[
+      {t:"Git Branching", d:"Creating an independent line of development off the main codebase, so work-in-progress doesn't disturb what's already working.", l:"A branch is really just a movable pointer to a commit — cheap to create, which is why feature-branch workflows are the norm."},
+      {t:"Merge vs Rebase", d:"Merge combines two branches' histories with a new merge commit, preserving exactly what happened; rebase replays one branch's commits on top of another, producing a linear history.", l:"Merge is safer for shared/public branches; rebase gives a cleaner history but rewrites commits, which is dangerous on a branch other people have already pulled."},
+      {t:"Merge Conflict", d:"Occurs when Git can't automatically reconcile changes because the same lines were edited differently on both branches.", l:"Resolved by manually choosing (or combining) the correct version of the conflicting lines, then committing the result — not a Git failure, just two people (or the same person on two branches) touching the same code."},
+    ]},
+    { h:"CI/CD", terms:[
+      {t:"Continuous Integration (CI)", d:"Automatically building and testing code every time it's pushed, so integration problems surface immediately instead of at release time.", l:"The core promise is catching a broken build within minutes of the commit that broke it, not days later when someone else pulls it."},
+      {t:"Continuous Deployment/Delivery (CD)", d:"Continuous delivery automatically prepares every passing build for release; continuous deployment goes further and automatically ships it to production with no manual step.", l:"The distinction interviewers check for: delivery still has a manual 'go' button, deployment doesn't."},
+      {t:"Pipeline", d:"The automated sequence of stages (build, test, deploy) a code change passes through on its way to production.", l:"Deploying the System Design Mastery course through GitHub + Netlify is a minimal real pipeline: a push to main triggers a build and deploy with no manual server work."},
+      {t:"Blue-Green / Canary Deployment", d:"Blue-green keeps two full production environments and switches traffic from the old to the new one all at once; canary rolls the new version out to a small slice of traffic first, then gradually increases it.", l:"Both exist to make deploys reversible and low-risk — canary additionally lets you catch a bad release before it affects everyone."},
+    ]},
+    { h:"Containers & Orchestration", terms:[
+      {t:"Docker / Container", d:"A container packages an application with everything it needs to run (dependencies, runtime, config) so it behaves identically on any machine.", l:"Lighter than a virtual machine because containers share the host OS kernel instead of virtualizing an entire OS — that's the specific technical answer to 'how is a container different from a VM'."},
+      {t:"Image vs Container", d:"An image is the immutable, packaged blueprint; a container is a running instance of that image.", l:"The same relationship as a class and an object — you can spin up many containers from one image."},
+      {t:"Kubernetes Basics (Pod / Service / Deployment)", d:"A pod is the smallest deployable unit (one or more tightly coupled containers); a deployment manages a set of pods and keeps the desired number running; a service gives a stable network address to a set of pods.", l:"Kubernetes exists to automate exactly what would otherwise be manual ops work: restarting crashed containers, scaling up under load, and routing traffic to healthy pods."},
+    ]},
+    { h:"Cloud Fundamentals", terms:[
+      {t:"IaaS / PaaS / SaaS", d:"IaaS gives you raw infrastructure (virtual machines, storage) you manage yourself; PaaS gives you a platform to deploy code onto without managing servers; SaaS gives you a finished application you just use.", l:"Netlify (for static/JAMstack hosting) and most Firebase/Firestore usage sit in PaaS territory — you never touch a server, you just ship code or data."},
+      {t:"Auto-Scaling", d:"Automatically adding or removing server instances based on current load.", l:"The cloud-native version of horizontal scaling — instead of manually provisioning for peak traffic, the system grows and shrinks with demand."},
+      {t:"Serverless / FaaS (Function as a Service)", d:"Running individual functions in response to events, without provisioning or managing any server at all — the platform handles scaling, and you're billed per invocation.", l:"Great for spiky, event-driven workloads; less ideal for long-running or highly stateful processes because functions are typically short-lived and stateless between invocations."},
+    ]},
+  ]
+},
+{
+  id:"security", file:"09_security.env", title:"Security Fundamentals",
+  blurb:"The baseline vocabulary for 'how could this be attacked, and what stops it'.",
+  sections:[
+    { h:"Core Concepts", terms:[
+      {t:"Encryption vs Hashing", d:"Encryption is reversible — you can decrypt ciphertext back to the original data with the right key. Hashing is one-way — you can't recover the original input from a hash.", l:"Passwords should be hashed (never encrypted) because you should never be able to recover the original password, even if your own database leaks."},
+      {t:"Salting", d:"Adding a unique random value to each password before hashing it.", l:"Defeats precomputed rainbow-table attacks and ensures two users with the same password get completely different stored hashes."},
+      {t:"TLS Handshake", d:"The process by which a client and server agree on encryption keys and verify identity via a certificate before any HTTPS data is exchanged.", l:"Relies on asymmetric cryptography (a public/private key pair) to safely agree on a shared symmetric key, which is then used for the actual fast encryption of the session."},
+    ]},
+    { h:"Web Vulnerabilities", terms:[
+      {t:"XSS (Cross-Site Scripting)", d:"An attacker injects malicious script into a page that then runs in another user's browser.", l:"Prevented mainly by escaping/sanitizing any user-supplied content before rendering it as HTML — never trust input that ends up on someone else's screen."},
+      {t:"CSRF (Cross-Site Request Forgery)", d:"An attacker tricks a logged-in user's browser into submitting a request to a site they're authenticated on, without the user meaning to.", l:"Prevented with anti-CSRF tokens (a value the real page includes that a forged request can't know) and same-site cookie restrictions."},
+      {t:"SQL Injection", d:"An attacker inserts malicious SQL into an input field that gets concatenated directly into a query.", l:"Prevented by using parameterized queries / prepared statements instead of string-concatenating user input into SQL — never build a query with raw string interpolation."},
+      {t:"CORS (Cross-Origin Resource Sharing)", d:"A browser security mechanism that blocks a web page from making requests to a different origin unless that origin explicitly allows it via response headers.", l:"A backend has to explicitly opt in (Access-Control-Allow-Origin) to let a frontend on a different domain call it — a very common real-world debugging scenario, not just interview trivia.", p:"Any time the Places Enrichment Console's React frontend and FastAPI backend are on different origins during development, this is exactly what has to be configured correctly."},
+    ]},
+    { h:"Auth Security", terms:[
+      {t:"OWASP Top 10", d:"A regularly updated list of the ten most critical web application security risks, maintained by the Open Web Application Security Project.", l:"You don't need to recite all ten, but recognizing the name and being able to name a few (injection, broken authentication, sensitive data exposure) signals you think about security as a category, not just ad hoc."},
+      {t:"Principle of Least Privilege", d:"Every user, service, or process should have only the minimum access it needs to do its job, nothing more.", l:"Applies from database roles to API keys to a Firestore security rule — the guiding question is always 'does this actually need this much access'."},
+      {t:"2FA / MFA (Multi-Factor Authentication)", d:"Requiring a second proof of identity beyond a password — a code from an app, a text message, a hardware key.", l:"Defends against the single biggest real-world weakness of password auth: passwords get reused, leaked, and guessed."},
+    ]},
+  ]
+},
+{
+  id:"testing", file:"10_testing.test.js", title:"Testing & Software Quality",
+  blurb:"How you prove code works — and keeps working after the next change.",
+  sections:[
+    { h:"Levels of Testing", terms:[
+      {t:"Unit Test", d:"Tests a single function or component in isolation, with all its dependencies faked or mocked out.", l:"Fast and precise about what broke, but doesn't tell you whether the pieces actually work together."},
+      {t:"Integration Test", d:"Tests how multiple units work together — a service talking to a real (or realistic) database, for example.", l:"Catches the bugs unit tests structurally can't: two correctly-implemented pieces that don't actually fit together."},
+      {t:"End-to-End (E2E) Test", d:"Tests the entire application flow from the user's perspective, usually by driving a real browser through real UI interactions.", l:"The most realistic but slowest and most brittle kind of test — small UI changes can break an E2E test that has nothing to do with the actual bug."},
+      {t:"Test Pyramid", d:"A guideline for how many of each test type to write: lots of fast unit tests at the base, fewer integration tests in the middle, and a small number of E2E tests at the top.", l:"The shape exists because slower, more realistic tests are also more expensive to run and maintain — you want just enough of them to catch what unit tests can't."},
+    ]},
+    { h:"Practices", terms:[
+      {t:"TDD (Test-Driven Development)", d:"Writing a failing test for a behavior before writing the code that makes it pass.", l:"The red-green-refactor cycle: write a failing test (red), write the minimum code to pass it (green), then clean the code up while the test keeps passing (refactor)."},
+      {t:"Mocking / Stubbing", d:"Replacing a real dependency (a database, an external API) with a fake version that returns controlled, predictable results.", l:"Lets you test your own code's logic without depending on a real network call, database, or third-party service actually being available and behaving a certain way."},
+      {t:"Code Coverage", d:"The percentage of your codebase actually executed while running the test suite.", l:"A useful signal for finding untested code, but a high number doesn't guarantee good tests — you can execute a line without ever actually asserting anything meaningful about it."},
+      {t:"Regression Testing", d:"Re-running existing tests after a change to make sure nothing that used to work has broken.", l:"The whole reason an automated test suite pays for itself over time — it catches the same class of bug you already fixed once from coming back."},
+    ]},
+  ]
+},
+{
+  id:"patterns", file:"11_patterns.ts", title:"Design Patterns & Architecture Styles",
+  blurb:"Named solutions to problems that show up again and again — the vocabulary that lets you describe a design in one word instead of a paragraph.",
+  sections:[
+    { h:"Principles", terms:[
+      {t:"SOLID", d:"Five principles for maintainable object-oriented design: Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, Dependency Inversion.", l:"Single Responsibility: a class should have one reason to change. Open/Closed: open for extension, closed for modification. Liskov Substitution: a subclass should be usable anywhere its parent is expected. Interface Segregation: prefer many small interfaces over one large one. Dependency Inversion: depend on abstractions, not concrete implementations."},
+      {t:"DRY (Don't Repeat Yourself)", d:"Every piece of knowledge should have a single, unambiguous representation in a system.", l:"Not just about avoiding copy-pasted code — the real point is avoiding two places that have to be kept in sync manually, since one of them will eventually be forgotten."},
+      {t:"KISS / YAGNI", d:"'Keep It Simple' and 'You Aren't Gonna Need It' — avoid unnecessary complexity and don't build for hypothetical future requirements.", l:"Both are a counterweight to over-engineering — the instinct to add flexibility or abstraction for a need that may never actually arrive."},
+    ]},
+    { h:"Common Patterns", terms:[
+      {t:"Singleton", d:"Ensures a class has exactly one instance, with a single global point of access to it.", l:"Useful for things like a single shared configuration or connection pool, but overused it becomes hidden global state that makes testing harder."},
+      {t:"Factory", d:"Delegates object creation to a dedicated method or class, instead of calling 'new' directly wherever an object is needed.", l:"Lets you change what concrete class gets created without touching every place that creates one."},
+      {t:"Adapter", d:"Wraps an existing class with a new interface so it can work with code that expects a different interface.", l:"The classic use case: making a third-party library's API match the interface your own code already expects, without modifying that library."},
+      {t:"Decorator", d:"Wraps an object to add new behavior dynamically, without modifying the object's own class.", l:"Lets you layer optional behavior (logging, caching, validation) around a core object, combined however you need, instead of creating a subclass for every combination."},
+      {t:"Observer", d:"An object (the subject) maintains a list of dependents (observers) and notifies them automatically of any state change.", l:"The pattern underneath event listeners, pub/sub systems, and reactive UI frameworks — anything where 'subscribe and get notified' is the shape of the problem."},
+      {t:"Strategy", d:"Defines a family of interchangeable algorithms and lets the client pick which one to use at runtime.", l:"Lets you swap behavior (e.g. different sorting or pricing algorithms) without an if/else chain or modifying the class that uses the strategy."},
+    ]},
+    { h:"Architecture Styles", terms:[
+      {t:"Layered / N-Tier Architecture", d:"Organizes an application into horizontal layers (presentation, business logic, data access), where each layer only talks to the one directly below it.", l:"Keeps concerns separated and swappable — you can change the database layer without touching business logic, as long as the interface between layers stays the same."},
+      {t:"Event-Driven Architecture", d:"Components communicate by emitting and reacting to events instead of calling each other directly.", l:"See the System Design file for the full treatment — the short version is that it trades tighter coupling for looser, more independently-scalable services."},
+      {t:"Serverless Architecture", d:"An application built from managed, event-triggered functions rather than servers you provision and maintain yourself.", l:"Shifts operational burden to the cloud provider, at the cost of less control and potential cold-start latency on the first request to an idle function."},
+    ]},
+  ]
+},
+{
+  id:"ai", file:"12_ai_systems.py", title:"AI, LLMs & Agentic Systems",
+  blurb:"The vocabulary behind the RAG/Agentic AI upgrade work already underway on your own internal tools — this is where that project and interview prep overlap directly.",
+  sections:[
+    { h:"Core LLM Vocabulary", terms:[
+      {t:"LLM (Large Language Model)", d:"A model trained on huge amounts of text to predict the next token, which turns out to be enough to generate coherent text, answer questions, and follow instructions.", l:"Everything else in this file is really about compensating for two LLM limitations: it only knows what was in its training data (fixed at a point in time), and it can't take real-world actions on its own."},
+      {t:"Token / Tokenization", d:"Text is broken into tokens (roughly word-pieces) before being fed to a model — the basic unit it reads and generates.", l:"Pricing, context limits, and even subtle behavior (a model 'sees' a word as one or several token pieces) are all measured in tokens, not characters or words."},
+      {t:"Embedding", d:"A vector (list of numbers) representing the meaning of a piece of text, positioned so that semantically similar text ends up close together in that vector space.", l:"This is what makes 'search by meaning, not exact keywords' possible — comparing two embeddings' distance tells you how similar their meanings are, even with completely different wording."},
+      {t:"Context Window", d:"The maximum amount of text (in tokens) a model can consider at once, including both the prompt and its own response.", l:"Everything relevant has to fit in this window — which is exactly the constraint that makes retrieval (fetching only the relevant pieces, instead of dumping everything in) necessary."},
+      {t:"Fine-Tuning vs Prompting vs RAG", d:"Fine-tuning retrains a model's weights on your own data; prompting just gives instructions/examples in the input at request time; RAG retrieves relevant information and includes it in the prompt at request time.", l:"Fine-tuning is expensive and slow to update; RAG is cheap to update (just change what's retrievable) and keeps the model's answers grounded in current, verifiable source data — which is why RAG, not fine-tuning, is the default choice for most internal-tool use cases."},
+    ]},
+    { h:"Retrieval-Augmented Generation (RAG)", terms:[
+      {t:"RAG (Retrieval-Augmented Generation)", d:"Before generating a response, the system retrieves relevant information from an external source and includes it in the prompt as context.", l:"Retrieve-then-generate: search first, then hand the LLM only what's relevant, so it answers from real, current data instead of only what it happened to memorize during training.", p:"This is exactly the shape of the Customs Clearance Composer upgrade already underway — retrieve the matching Firestore dictionary entries and invoice line items, then have the LLM compose the email from that retrieved context instead of just running a raw translation call."},
+      {t:"Vector Database", d:"A database optimized for storing embeddings and finding the ones most similar to a query embedding, fast, even across millions of entries.", l:"The retrieval half of RAG — instead of exact keyword matching, it finds semantically related content, so a query and a document that mean the same thing but use different words still match."},
+      {t:"Semantic Search", d:"Searching by meaning rather than exact keyword match, using embeddings to find conceptually related results.", l:"Solves the classic keyword-search failure where a user's query and the relevant document just don't share the same words."},
+      {t:"Chunking", d:"Splitting a large document into smaller pieces before embedding and storing them, so retrieval returns focused, relevant sections instead of entire documents.", l:"Chunk size is a real design decision — too small loses context, too large drags in irrelevant text and wastes context-window space."},
+    ]},
+    { h:"Agentic AI", terms:[
+      {t:"AI Agent", d:"A system where an LLM doesn't just respond once, but plans, takes actions (often by calling tools), observes the results, and decides what to do next — in a loop, toward a goal.", l:"The difference from a plain chatbot is the loop: an agent can check its own work and act on what it finds, rather than producing one best-guess answer and stopping."},
+      {t:"Tool Use / Function Calling", d:"Letting an LLM call predefined functions (look up a record, run a calculation, check a database) as part of producing its answer, instead of only generating text.", l:"This is what turns a model from 'a very good guesser' into something that can verify a fact against a real system before answering."},
+      {t:"Agentic Loop (Plan → Act → Observe)", d:"The repeating cycle an agent runs: decide what to do next, take that action (often a tool call), observe the result, and decide again.", l:"The loop is what allows a propose-then-verify workflow instead of a single unchecked generation.", p:"This is the target design for the GS BULK PI upgrade: propose a fix for a flagged item, verify it against the item-code registry via a real lookup, and only then present it for approval — a genuine plan/act/observe loop, not just an LLM guessing once."},
+      {t:"Prompt Engineering", d:"Deliberately structuring the instructions, examples, and context given to an LLM to reliably get the output format and quality you want.", l:"Few-shot examples (showing the model 2-3 worked examples of the exact task) are usually the single highest-leverage technique — more reliable than just describing the task in the abstract."},
+      {t:"Hallucination", d:"When a model confidently generates information that is fabricated or incorrect, with no signal that it's uncertain.", l:"The core reason RAG and tool-use exist — grounding answers in retrieved, real data (or verifying them with a real tool call) is the main practical defense against it, not just better prompting."},
+    ]},
+  ]
+},
+];
+</script>
+<script>
+(function(){
+  "use strict";
+  var DOMAINS = window.CHEATSHEET_DATA;
+  var LS_KEY = "vocabstack_known_v1";
+  var known = {};
+  try{ known = JSON.parse(localStorage.getItem(LS_KEY) || "{}"); }catch(e){ known = {}; }
+  function saveKnown(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(known)); }catch(e){} }
+
+  var openTabs = ["roadmap"];
+  var activeId = "roadmap";
+
+  var fileListEl = document.getElementById("fileList");
+  var tabbarEl = document.getElementById("tabbar");
+  var editorInnerEl = document.getElementById("editorInner");
+  var sidebarEl = document.getElementById("sidebar");
+  var overlayEl = document.getElementById("overlay");
+  var menuBtn = document.getElementById("menuBtn");
+  var searchInput = document.getElementById("searchInput");
+  var resultsEl = document.getElementById("results");
+  var actExplorer = document.getElementById("actExplorer");
+  var actProgress = document.getElementById("actProgress");
+  var sidebarExplorer = document.getElementById("sidebarExplorer");
+  var sidebarProgress = document.getElementById("sidebarProgress");
+
+  function domainById(id){
+    for (var i=0;i<DOMAINS.length;i++){ if (DOMAINS[i].id===id) return DOMAINS[i]; }
+    return null;
+  }
+  function totalTerms(d){
+    var n=0; for (var i=0;i<d.sections.length;i++){ n += d.sections[i].terms.length; } return n;
+  }
+  function knownCount(d){
+    var n=0;
+    for (var s=0;s<d.sections.length;s++){
+      for (var t=0;t<d.sections[s].terms.length;t++){
+        if (known[d.id+"-"+s+"-"+t]) n++;
+      }
+    }
+    return n;
+  }
+
+  function renderFileList(){
+    var html = '<div class="file-row'+(activeId==="roadmap"?" active":"")+'" data-open="roadmap"><span class="fname">ROADMAP.md</span></div>';
+    for (var i=0;i<DOMAINS.length;i++){
+      var d = DOMAINS[i];
+      var tot = totalTerms(d), kn = knownCount(d);
+      html += '<div class="file-row'+(activeId===d.id?" active":"")+'" data-open="'+d.id+'">'+
+              '<span class="fname">'+d.file+'</span><span class="fprog">'+kn+'/'+tot+'</span></div>';
+    }
+    fileListEl.innerHTML = html;
+    Array.prototype.forEach.call(fileListEl.querySelectorAll(".file-row"), function(row){
+      row.addEventListener("click", function(){ openFile(row.getAttribute("data-open")); closeSidebarMobile(); });
+    });
+  }
+
+  function renderProgressPanel(){
+    var totAll=0, knAll=0;
+    var html = '<h3>Progress</h3>';
+    for (var i=0;i<DOMAINS.length;i++){
+      var d = DOMAINS[i];
+      var tot = totalTerms(d), kn = knownCount(d);
+      totAll += tot; knAll += kn;
+      var pct = tot ? Math.round(kn/tot*100) : 0;
+      html += '<div class="prog-row"><div class="prow-top"><span>'+d.title+'</span><span>'+kn+'/'+tot+'</span></div>'+
+              '<div class="prow-bar"><div class="prow-fill" style="width:'+pct+'%"></div></div></div>';
+    }
+    var pctAll = totAll ? Math.round(knAll/totAll*100) : 0;
+    html += '<div class="prog-total">'+knAll+' of '+totAll+' terms marked solid ('+pctAll+'%)</div>';
+    sidebarProgress.innerHTML = html;
+  }
+
+  function renderTabs(){
+    var html = "";
+    openTabs.forEach(function(id){
+      var label = id==="roadmap" ? "ROADMAP.md" : domainById(id).file;
+      html += '<div class="tab'+(id===activeId?" active":"")+'" data-tab="'+id+'">'+
+              '<span>'+label+'</span><span class="close" data-close="'+id+'">&times;</span></div>';
+    });
+    tabbarEl.innerHTML = html;
+    Array.prototype.forEach.call(tabbarEl.querySelectorAll(".tab"), function(tabEl){
+      tabEl.addEventListener("click", function(ev){
+        if (ev.target.hasAttribute("data-close")){
+          ev.stopPropagation();
+          closeTab(ev.target.getAttribute("data-close"));
+          return;
+        }
+        activeId = tabEl.getAttribute("data-tab");
+        render();
+      });
+    });
+  }
+
+  function openFile(id){
+    if (openTabs.indexOf(id) === -1) openTabs.push(id);
+    activeId = id;
+    render();
+  }
+  function closeTab(id){
+    var idx = openTabs.indexOf(id);
+    if (idx > -1) openTabs.splice(idx,1);
+    if (openTabs.length === 0) openTabs.push("roadmap");
+    if (activeId === id) activeId = openTabs[openTabs.length-1];
+    render();
+  }
+
+  function renderRoadmap(){
+    var steps = [
+      {t:"Programming Fundamentals + DSA", f:"fundamentals", n:"02_dsa.cpp", note:"Start here. This is the single biggest gap between what you can build and what a technical round tests — Big-O, trees, graphs, DP are pure vocabulary and pattern recognition, not new engineering skill."},
+      {t:"Databases & Data Modeling", f:"databases", note:"ACID, normalization, indexing, SQL vs NoSQL. You already use Firestore daily — this fills in the formal terms for decisions you're already making by instinct."},
+      {t:"Backend & API Design", f:"backend", note:"REST, auth (sessions/JWT/OAuth), middleware. Mostly naming things you've already built into Procurement, Places Enrichment, and World Shiner."},
+      {t:"OS, Networking & Concurrency", f:"osnet", note:"Processes vs threads, TCP vs UDP, the event loop. The most 'pure CS' section — least tied to daily practical work, so budget real time here."},
+      {t:"Frontend Engineering", f:"frontend", note:"Virtual DOM, hooks, the rendering pipeline. Likely your strongest section already — mainly about attaching correct terminology to what you do intuitively."},
+      {t:"System Design & Scalability", f:"systemdesign", note:"The condensed index card here; the full 12-week System Design Mastery course is the deep-dive version of this same material."},
+      {t:"Security Fundamentals", f:"security", note:"OWASP-style vocabulary: XSS, CSRF, injection, encryption vs hashing. Short section, disproportionately likely to come up as a quick-fire round."},
+      {t:"Testing & Software Quality", f:"testing", note:"Unit vs integration vs E2E, TDD, mocking. Quick to review — mostly about using the right word for practices you already follow."},
+      {t:"DevOps, Cloud & Version Control", f:"devops", note:"Git internals, CI/CD, containers. Your Netlify + GitHub deploy of the System Design course is a real, working example of a CI/CD pipeline — use it as your story."},
+      {t:"Design Patterns & Architecture Styles", f:"patterns", note:"SOLID, GoF patterns, monolith vs microservices. Mostly vocabulary for structuring decisions you already make when a codebase starts feeling messy."},
+      {t:"AI, LLMs & Agentic Systems", f:"ai", note:"Embeddings, RAG, agentic loops — directly tied to the RAG/Agentic AI upgrade project already running on your own tools. This is where interview prep and that project are the same work."},
+    ];
+    var html = '<h1 class="rm-title">Roadmap</h1>'+
+      '<p class="rm-sub">All tech stacks, one reference — built to close the gap between what you can build and what a technical round tests for.</p>'+
+      '<div class="rm-note"><b>Read this first —</b> the diagnosis behind this file is specific: your gap is CS-fundamentals and interview vocabulary, not practical ability. You\'ve shipped real production systems (World Shiner, GS BULK PI, the Customs Composer, the Places Enrichment pipeline). This cheatsheet exists to give you the correct name and precise definition for things you\'ve already built — that\'s what actually costs points in a technical round, not the building itself. Every term tagged <b>You\'ve shipped this</b> below ties straight back to one of your own projects.</div>'+
+      '<ul class="rm-steps">';
+    steps.forEach(function(s, i){
+      html += '<li class="rm-step"><div class="rm-step-body"><h3><span class="rm-step-file" data-open="'+s.f+'">'+s.t+'</span></h3><p>'+s.note+'</p></div></li>';
+    });
+    html += '</ul>'+
+      '<div class="rm-howto"><h3>How to use this</h3><ul>'+
+      '<li>Work top to bottom your first pass — the order above is weighted toward your actual gap, DSA and OS/networking first.</li>'+
+      '<li>Use the search bar (top right, or press <span class="kbd">/</span>) to cram or double-check a single term right before a call.</li>'+
+      '<li>Tick the checkbox on a term once you can explain it out loud, from memory, in under 30 seconds — that\'s the actual bar for a technical round, not recognizing the definition when you read it.</li>'+
+      '<li>Check the Progress panel (left icon rail) to see what\'s left before an interview.</li>'+
+      '</ul></div>';
+    editorInnerEl.innerHTML = html;
+    Array.prototype.forEach.call(editorInnerEl.querySelectorAll("[data-open]"), function(el){
+      el.addEventListener("click", function(){ openFile(el.getAttribute("data-open")); });
+    });
+  }
+
+  function termId(domainId, si, ti){ return domainId+"-"+si+"-"+ti; }
+
+  function renderDomain(d){
+    var html = '<div class="dm-header"><h1 class="dm-title">'+d.title+'</h1><p class="dm-blurb">'+d.blurb+'</p></div>';
+    d.sections.forEach(function(sec, si){
+      html += '<div class="section-heading">'+sec.h+'</div>';
+      sec.terms.forEach(function(term, ti){
+        var id = termId(d.id, si, ti);
+        var isKnown = !!known[id];
+        html += '<div class="term-card'+(isKnown?" known":"")+'" id="term-'+id+'" data-term-id="'+id+'">'+
+          '<div class="term-top"><input type="checkbox" class="term-check" data-check="'+id+'" '+(isKnown?"checked":"")+'>'+
+          '<span class="term-name">'+term.t+'</span></div>'+
+          '<div class="term-def">'+term.d+'</div>'+
+          '<div class="term-logic">'+term.l+'</div>';
+        if (term.a || term.p){
+          html += '<div class="term-meta">';
+          if (term.a) html += '<span class="term-ask"><b>Interview angle</b>'+term.a+'</span>';
+          if (term.p) html += '<span class="term-anchor"><b>You\'ve shipped this</b>'+term.p+'</span>';
+          html += '</div>';
+        }
+        html += '</div>';
+      });
+    });
+    editorInnerEl.innerHTML = html;
+    Array.prototype.forEach.call(editorInnerEl.querySelectorAll("[data-check]"), function(cb){
+      cb.addEventListener("change", function(){
+        var id = cb.getAttribute("data-check");
+        known[id] = cb.checked;
+        saveKnown();
+        cb.closest(".term-card").classList.toggle("known", cb.checked);
+        renderFileList();
+        if (!sidebarProgress.hidden) renderProgressPanel();
+      });
+    });
+  }
+
+  function render(){
+    renderFileList();
+    renderTabs();
+    if (activeId === "roadmap") renderRoadmap();
+    else renderDomain(domainById(activeId));
+  }
+
+  // ---- Search ----
+  function allTermsFlat(){
+    var out = [];
+    DOMAINS.forEach(function(d){
+      d.sections.forEach(function(sec, si){
+        sec.terms.forEach(function(term, ti){
+          out.push({domain:d, id:termId(d.id, si, ti), term:term});
+        });
+      });
+    });
+    return out;
+  }
+  var FLAT = allTermsFlat();
+
+  function runSearch(q){
+    q = q.trim().toLowerCase();
+    if (!q){ resultsEl.hidden = true; resultsEl.innerHTML = ""; return; }
+    var matches = FLAT.filter(function(item){
+      return item.term.t.toLowerCase().indexOf(q) > -1 || item.term.d.toLowerCase().indexOf(q) > -1;
+    }).slice(0, 24);
+    if (!matches.length){
+      resultsEl.innerHTML = '<div class="result-empty">No terms match "'+q.replace(/</g,"&lt;")+'"</div>';
+      resultsEl.hidden = false;
+      return;
+    }
+    resultsEl.innerHTML = matches.map(function(item){
+      return '<div class="result-item" data-goto-domain="'+item.domain.id+'" data-goto-term="'+item.id+'">'+
+        '<span class="result-term">'+item.term.t+'</span><span class="result-file">'+item.domain.file+'</span>'+
+        '<div class="result-def">'+item.term.d+'</div></div>';
+    }).join("");
+    resultsEl.hidden = false;
+    Array.prototype.forEach.call(resultsEl.querySelectorAll(".result-item"), function(row){
+      row.addEventListener("click", function(){
+        var dId = row.getAttribute("data-goto-domain");
+        var tId = row.getAttribute("data-goto-term");
+        searchInput.value = "";
+        resultsEl.hidden = true;
+        openFile(dId);
+        setTimeout(function(){
+          var el = document.getElementById("term-"+tId);
+          if (el){
+            el.scrollIntoView({block:"center", behavior:"smooth"});
+            el.classList.add("flash");
+            setTimeout(function(){ el.classList.remove("flash"); }, 2200);
+          }
+        }, 30);
+      });
+    });
+  }
+  searchInput.addEventListener("input", function(){ runSearch(searchInput.value); });
+  searchInput.addEventListener("keydown", function(ev){ if (ev.key === "Escape"){ searchInput.value=""; resultsEl.hidden=true; searchInput.blur(); } });
+  document.addEventListener("click", function(ev){
+    if (!ev.target.closest(".searchwrap")) { resultsEl.hidden = true; }
+  });
+  document.addEventListener("keydown", function(ev){
+    if (ev.key === "/" && document.activeElement !== searchInput && !/input|textarea/i.test(document.activeElement.tagName)){
+      ev.preventDefault(); searchInput.focus();
+    }
+  });
+
+  // ---- Activity bar switch ----
+  actExplorer.addEventListener("click", function(){
+    actExplorer.classList.add("active"); actProgress.classList.remove("active");
+    sidebarExplorer.hidden = false; sidebarProgress.hidden = true;
+  });
+  actProgress.addEventListener("click", function(){
+    actProgress.classList.add("active"); actExplorer.classList.remove("active");
+    sidebarExplorer.hidden = true; sidebarProgress.hidden = false;
+    renderProgressPanel();
+  });
+
+  // ---- Mobile sidebar ----
+  function openSidebarMobile(){ sidebarEl.classList.add("open"); overlayEl.classList.add("show"); }
+  function closeSidebarMobile(){ sidebarEl.classList.remove("open"); overlayEl.classList.remove("show"); }
+  menuBtn.addEventListener("click", openSidebarMobile);
+  overlayEl.addEventListener("click", closeSidebarMobile);
+
+  render();
+})();
+</script>
+
+</body>
+</html>
